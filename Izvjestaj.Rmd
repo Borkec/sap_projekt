@@ -1,0 +1,117 @@
+---
+title: "SAP - projekt"
+subtitle: "Analiza spotify pjesama"
+author: "Ema Smolić, Petar Borko, Antun Tišljar, Magda Milički"
+date: "8.12.2021"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(ggstatsplot)
+library(ggplot2)
+```
+
+```{r}
+dim(SpotifyFeatures)
+```
+
+```{r}
+head(SpotifyFeatures)
+```
+```{r}
+names(SpotifyFeatures)
+```
+
+```{r}
+summary(SpotifyFeatures)
+```
+
+```{r}
+SpotifyFeatures %>% group_by(genre) %>% summarise(
+  Mean.tempo=mean(tempo),
+  Med.tempo=median(tempo),
+  MeanTr.tempo=mean(tempo, trim = 0.1),
+  IQR.tempo=IQR(tempo),
+  sd.tempo=sd(tempo)
+) -> summary.result1
+summary.result1
+```
+
+```{r} 
+
+ggplot(SpotifyFeatures, aes(x=genre, y=tempo)) +
+  geom_boxplot(outlier.color="red" )
+
+```
+```{r}
+boxplot(summary.result1[,c(2)])
+```
+
+Zadatak 1.
+```{r}
+#results <- SpotifyFeatures %>% group_by(genre)
+#result
+t.test(SpotifyFeatures$tempo[SpotifyFeatures$genre=="A Capella"], mu=mean(SpotifyFeatures$tempo), alt="two.sided")
+var(SpotifyFeatures$tempo[SpotifyFeatures$genre=="A Capella"])
+```
+
+
+Zadatak 2.
+
+```{r}
+durs = SpotifyFeatures$danceability[SpotifyFeatures$mode=="Major"]
+mols = SpotifyFeatures$danceability[SpotifyFeatures$mode=="Minor"]
+```
+
+Provjeravamo pretpostavku normalnosti i nezavisnosti uzorka.
+
+```{r}
+
+h = hist(durs,
+     breaks=20,
+     main="Histogram plesnosti pjesama u duru")
+
+h = hist(mols,
+     breaks=20,
+     main="Histogram plesnosti pjesama u molu")
+
+```
+
+```{r}
+qqnorm(durs, pch = 1, frame = FALSE, main = "Plesnost u duru")
+qqline(durs, col = "steelblue", lwd = 2)
+
+qqnorm(SpotifyFeatures$danceability[SpotifyFeatures$mode=="Minor"], pch = 1, frame = FALSE, main = "Plesnost u molu")
+qqline(SpotifyFeatures$danceability[SpotifyFeatures$mode=="Minor"], col = "green", lwd = 2)
+```
+
+
+
+
+```{r}
+var(durs)
+var(mols)
+```
+
+Racunamo razliku varijanci:
+
+```{r}
+var.test(durs, mols)
+```
+
+Mala p-vrijednost nam govori da odbacimo nultu hipotezu te da varijance nisu jednake.
+
+H0 = {pjesme u duru su jednako plesnije kao pjesme u molu}
+H1 = {pjesme u duru su plesnije od pjesama u molu}
+
+```{r}
+
+t.test(durs, mols, alt="greater")
+ 
+```
+
+
+
+
