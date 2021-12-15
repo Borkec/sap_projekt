@@ -41,20 +41,26 @@ summary.result1
 
 ```{r} 
 
-ggplot(SpotifyFeatures, aes(x=genre, y=tempo)) +
+ggplot(SpotifyFeatures, aes(x=tempo, y=genre)) +
   geom_boxplot(outlier.color="red" )
 
 ```
+
+Boxplot svih srednjih vrijednosti
 ```{r}
 boxplot(summary.result1[,c(2)])
 ```
 
 Zadatak 1.
+# todo: napravit tablicu koja prolazi po svim zanrovima i za svaki napise p vrijednost pripadajuceg t testa
 ```{r}
 #results <- SpotifyFeatures %>% group_by(genre)
 #result
-t.test(SpotifyFeatures$tempo[SpotifyFeatures$genre=="A Capella"], mu=mean(SpotifyFeatures$tempo), alt="two.sided")
+t.test(SpotifyFeatures$tempo[SpotifyFeatures$genre=="A Capella"], mu=mean(SpotifyFeatures$tempo), alt="two.sided", conf.level = .95)
 var(SpotifyFeatures$tempo[SpotifyFeatures$genre=="A Capella"])
+
+t.test(SpotifyFeatures$tempo[SpotifyFeatures$genre=="Reggae"], mu=mean(SpotifyFeatures$tempo), alt="two.sided")
+var(SpotifyFeatures$tempo[SpotifyFeatures$genre=="Reggae"])
 ```
 
 
@@ -83,8 +89,8 @@ h = hist(mols,
 qqnorm(durs, pch = 1, frame = FALSE, main = "Plesnost u duru")
 qqline(durs, col = "steelblue", lwd = 2)
 
-qqnorm(SpotifyFeatures$danceability[SpotifyFeatures$mode=="Minor"], pch = 1, frame = FALSE, main = "Plesnost u molu")
-qqline(SpotifyFeatures$danceability[SpotifyFeatures$mode=="Minor"], col = "green", lwd = 2)
+qqnorm(durs, pch = 1, frame = FALSE, main = "Plesnost u molu")
+qqline(mols, col = "green", lwd = 2)
 ```
 
 
@@ -98,7 +104,7 @@ var(mols)
 Racunamo razliku varijanci:
 
 ```{r}
-var.test(durs, mols)
+var.test(mols, durs)
 ```
 
 Mala p-vrijednost nam govori da odbacimo nultu hipotezu te da varijance nisu jednake.
@@ -108,7 +114,7 @@ H1 = {pjesme u duru su plesnije od pjesama u molu}
 
 ```{r}
 
-t.test(durs, mols, alt="greater")
+t.test(durs, mols, alt="greater", var.equal=FALSE)
  
 ```
 
