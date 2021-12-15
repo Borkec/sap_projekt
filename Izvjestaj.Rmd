@@ -115,9 +115,111 @@ H1 = {pjesme u duru su plesnije od pjesama u molu}
 ```{r}
 
 t.test(durs, mols, alt="greater", var.equal=FALSE)
- 
+t.test(durs, mols, alt="less", var.equal=FALSE)
+```
+
+Prvim t-testom  smo pokazali da ne odbacujemo nultu hipotezu da su pjesme u duru jednako plesne kao u molu,
+a drugim smo odbacili nultu hipotezu i mozemo zakljuciti da su pjesme u molu plesnije od pjesama u duru.
+
+
+
+
+3. zadatak
+
+```{r}
+plot(SpotifyFeatures$energy,SpotifyFeatures$popularity)
+plot(SpotifyFeatures$valence,SpotifyFeatures$popularity)
+plot(SpotifyFeatures$tempo,SpotifyFeatures$popularity)
+plot(SpotifyFeatures$danceability,SpotifyFeatures$popularity)
+plot(SpotifyFeatures$duration_ms,SpotifyFeatures$popularity)
+plot(SpotifyFeatures$instrumentalness,SpotifyFeatures$popularity)
+plot(SpotifyFeatures$speechiness,SpotifyFeatures$popularity)
+```
+
+```{r}
+fit.energy = lm(popularity~energy,data=SpotifyFeatures)
+
+plot(SpotifyFeatures$energy,SpotifyFeatures$popularity)
+lines(SpotifyFeatures$energy,fit.energy$fitted.values,col='red')
+
+fit.tempo = lm(popularity~tempo,data=SpotifyFeatures)
+plot(SpotifyFeatures$tempo,SpotifyFeatures$popularity)
+lines(SpotifyFeatures$tempo,fit.tempo$fitted.values,col='red')
+
+fit.danceability = lm(popularity~danceability,data=SpotifyFeatures)
+plot(SpotifyFeatures$danceability,SpotifyFeatures$popularity)
+lines(SpotifyFeatures$danceability,fit.danceability$fitted.values,col='red')
+
+fit.duration_ms= lm(popularity~duration_ms,data=SpotifyFeatures)
+plot(SpotifyFeatures$duration_ms,SpotifyFeatures$popularity)
+lines(SpotifyFeatures$duration_ms,fit.duration_ms$fitted.values,col='red')
+
+fit.instrumentalness = lm(popularity~instrumentalness,data=SpotifyFeatures)
+plot(SpotifyFeatures$instrumentalness,SpotifyFeatures$popularity)
+lines(SpotifyFeatures$instrumentalness,fit.instrumentalness$fitted.values,col='red')
+
+fit.speechiness = lm(popularity~speechiness,data=SpotifyFeatures)
+plot(SpotifyFeatures$speechiness,SpotifyFeatures$popularity)
+lines(SpotifyFeatures$speechiness,fit.speechiness$fitted.values,col='red')
+
+fit.loudness = lm(popularity~loudness,data=SpotifyFeatures)
+plot(SpotifyFeatures$loudness,SpotifyFeatures$popularity)
+lines(SpotifyFeatures$loudness,fit.loudness$fitted.values,col='red')
 ```
 
 
 
 
+
+
+
+```{r}
+selected.model = fit.loudness
+plot(selected.model$residuals)
+
+hist((selected.model$residuals))
+hist(rstandard(selected.model))
+
+qqnorm(rstandard(selected.model))
+qqline(rstandard(selected.model))
+
+plot(selected.model$fitted.values,selected.model$residuals)
+ 
+ks.test(rstandard(fit.tempo),'pnorm')
+
+require(nortest)
+lillie.test(rstandard(fit.tempo))
+```
+
+
+
+
+```{r}
+
+summary(fit.loudness)
+
+summary(fit.energy)
+
+summary(fit.danceability)
+
+summary(fit.speechiness)
+
+summary(fit.instrumentalness)
+
+```
+
+
+
+```{r}
+cor(SpotifyFeatures$loudness,SpotifyFeatures$popularity)
+
+cor.test(SpotifyFeatures$loudness,SpotifyFeatures$popularity)
+```
+
+
+```{r}
+fit.loudness_dance = lm(popularity ~ danceability + instrumentalness, SpotifyFeatures) #regresija s jako koreliranim varijablama
+summary(fit.loudness_dance)
+
+cor(SpotifyFeatures$danceability,SpotifyFeatures$loudness)
+```
