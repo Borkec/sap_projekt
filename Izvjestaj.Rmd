@@ -50,19 +50,39 @@ Boxplot svih srednjih vrijednosti
 ```{r}
 boxplot(summary.result1[,c(2)])
 ```
-
+note> izbrisi t test, ostavi tablicu radi varijanci
 Zadatak 1.
-# todo: napravit tablicu koja prolazi po svim zanrovima i za svaki napise p vrijednost pripadajuceg t testa
 ```{r}
-#results <- SpotifyFeatures %>% group_by(genre)
-#result
-t.test(SpotifyFeatures$tempo[SpotifyFeatures$genre=="A Capella"], mu=mean(SpotifyFeatures$tempo), alt="two.sided", conf.level = .95)
-var(SpotifyFeatures$tempo[SpotifyFeatures$genre=="A Capella"])
+#HERE
+genres <- unique(SpotifyFeatures$genre) 
+ps <- list()
+i <- 1
+vars <- list()
 
-t.test(SpotifyFeatures$tempo[SpotifyFeatures$genre=="Reggae"], mu=mean(SpotifyFeatures$tempo), alt="two.sided")
-var(SpotifyFeatures$tempo[SpotifyFeatures$genre=="Reggae"])
+for(g in genres) {
+  print(g)
+  t_test = t.test(SpotifyFeatures$tempo[SpotifyFeatures$genre==g], mu=mean(SpotifyFeatures$tempo), alt="two.sided", conf.level = .95)
+  print(t_test) 
+  ps[i] <- t_test$p.value
+  vars[i] <- var(SpotifyFeatures$tempo[SpotifyFeatures$genre==g])
+  i <- i + 1
+  #print(var(SpotifyFeatures$tempo[SpotifyFeatures$genre==g]))
+}
+genres_ps <- do.call(rbind, Map(data.frame, genre=genres, p_value=ps, vars=vars))
+print(genres_ps)
+
+bartlett.test(SpotifyFeatures$tempo ~ SpotifyFeatures$genre)
+
+var((SpotifyFeatures$tempo[SpotifyFeatures$genre=='Pop']))
 ```
+Iako je p-vrijednost Bartlettovog testa vrlo mala, vidimo da su varijance dovoljno blizu za provo]enje ANOVA testa.
 
+
+```{r}
+a = aov(SpotifyFeatures$tempo ~ SpotifyFeatures$genre)
+summary(a)
+```
+p-vrijednost ANOVA testa manja je od 2*10 -16 pa odbacujemo H0 i yakljucujemo da barem dva zanra koji nemaju jednaki tempo.
 
 Zadatak 2.
 
@@ -107,25 +127,37 @@ Racunamo razliku varijanci:
 var.test(mols, durs)
 ```
 
-Mala p-vrijednost nam govori da odbacimo nultu hipotezu te da varijance nisu jednake.
+Mala p-vrijednost nam govori da odbacimo nultu hipotezu te da varijance vrlo vjerojatno nisu jednake.
 
-H0 = {pjesme u duru su jednako plesnije kao pjesme u molu}
+H0 = {pjesme u duru su jednako plesne kao pjesme u molu}
 H1 = {pjesme u duru su plesnije od pjesama u molu}
 
 ```{r}
+
+t.test(durs, mols, alt="two.sided", var.equal=FALSE)
 
 t.test(durs, mols, alt="greater", var.equal=FALSE)
 t.test(durs, mols, alt="less", var.equal=FALSE)
 ```
 
-Prvim t-testom  smo pokazali da ne odbacujemo nultu hipotezu da su pjesme u duru jednako plesne kao u molu,
-a drugim smo odbacili nultu hipotezu i mozemo zakljuciti da su pjesme u molu plesnije od pjesama u duru.
+# Prvim t-testom  smo pokazali da ne odbacujemo nultu hipotezu da su pjesme u duru jednako plesne kao u molu,
+# a drugim smo odbacili nultu hipotezu da pjesme u duru nisu manje plesne (jednake srednje vrijednosti) od onih u molu.
+
+Odbacili smo hipotezu da su aritm. vrijednosti plesnosti pjesama u duru i onih u molu jednake u korist alternativne hipoteze da su pjesme u duru manje 
+plesne od onih u molu.
 
 
 
 
 3. zadatak
 
+
+```{r}
+col_names = names(SpotifyFeatures)
+col_names = col_names[-c(1,2,3,4,5,11,14,17)]
+```
+
+grafovi su takvi ybog prevelike kolicine podataka  *dataseta
 ```{r}
 plot(SpotifyFeatures$energy,SpotifyFeatures$popularity)
 plot(SpotifyFeatures$valence,SpotifyFeatures$popularity)
@@ -134,37 +166,59 @@ plot(SpotifyFeatures$danceability,SpotifyFeatures$popularity)
 plot(SpotifyFeatures$duration_ms,SpotifyFeatures$popularity)
 plot(SpotifyFeatures$instrumentalness,SpotifyFeatures$popularity)
 plot(SpotifyFeatures$speechiness,SpotifyFeatures$popularity)
-```
-
-```{r}
-fit.energy = lm(popularity~energy,data=SpotifyFeatures)
-
-plot(SpotifyFeatures$energy,SpotifyFeatures$popularity)
-lines(SpotifyFeatures$energy,fit.energy$fitted.values,col='red')
-
-fit.tempo = lm(popularity~tempo,data=SpotifyFeatures)
-plot(SpotifyFeatures$tempo,SpotifyFeatures$popularity)
-lines(SpotifyFeatures$tempo,fit.tempo$fitted.values,col='red')
-
-fit.danceability = lm(popularity~danceability,data=SpotifyFeatures)
-plot(SpotifyFeatures$danceability,SpotifyFeatures$popularity)
-lines(SpotifyFeatures$danceability,fit.danceability$fitted.values,col='red')
-
-fit.duration_ms= lm(popularity~duration_ms,data=SpotifyFeatures)
-plot(SpotifyFeatures$duration_ms,SpotifyFeatures$popularity)
-lines(SpotifyFeatures$duration_ms,fit.duration_ms$fitted.values,col='red')
-
-fit.instrumentalness = lm(popularity~instrumentalness,data=SpotifyFeatures)
-plot(SpotifyFeatures$instrumentalness,SpotifyFeatures$popularity)
-lines(SpotifyFeatures$instrumentalness,fit.instrumentalness$fitted.values,col='red')
-
-fit.speechiness = lm(popularity~speechiness,data=SpotifyFeatures)
-plot(SpotifyFeatures$speechiness,SpotifyFeatures$popularity)
-lines(SpotifyFeatures$speechiness,fit.speechiness$fitted.values,col='red')
-
-fit.loudness = lm(popularity~loudness,data=SpotifyFeatures)
 plot(SpotifyFeatures$loudness,SpotifyFeatures$popularity)
-lines(SpotifyFeatures$loudness,fit.loudness$fitted.values,col='red')
+```
+
+
+
+
+
+```{r} 
+
+log_dur <- SpotifyFeatures$duration_ms
+
+
+fit.loudness = lm(popularity~log_dur,data=SpotifyFeatures)
+plot(log_dur,SpotifyFeatures$popularity)
+lines(log_dur,fit.loudness$fitted.values,col='red')
+``` 
+
+
+```{r} 
+pop <- SpotifyFeatures %>% filter(SpotifyFeatures$genre == "R&B")
+print(pop)
+```
+
+
+```{r}
+pop <- data.frame(pop)
+fit.energy = lm(popularity~energy,data=pop)
+plot(pop$energy,pop$popularity)
+lines(pop$energy,fit.energy$fitted.values,col='red')
+
+fit.tempo = lm(popularity~tempo,data=pop)
+plot(pop$tempo,pop$popularity)
+lines(pop$tempo,fit.tempo$fitted.values,col='red')
+
+fit.danceability = lm(popularity~danceability,data=pop)
+plot(pop$danceability,pop$popularity)
+lines(pop$danceability,fit.danceability$fitted.values,col='red')
+
+fit.duration_ms= lm(popularity~duration_ms,data=pop)
+plot(pop$duration_ms,pop$popularity)
+lines(pop$duration_ms,fit.duration_ms$fitted.values,col='red')
+
+fit.instrumentalness = lm(popularity~instrumentalness,data=pop)
+plot(pop$instrumentalness,pop$popularity)
+lines(pop$instrumentalness,fit.instrumentalness$fitted.values,col='red')
+
+fit.speechiness = lm(popularity~speechiness,data=pop)
+plot(pop$speechiness,pop$popularity)
+lines(pop$speechiness,fit.speechiness$fitted.values,col='red')
+
+fit.loudness = lm(popularity~loudness,data=pop)
+plot(pop$loudness,pop$popularity)
+lines(pop$loudness,fit.loudness$fitted.values,col='red')
 ```
 
 
@@ -174,7 +228,8 @@ lines(SpotifyFeatures$loudness,fit.loudness$fitted.values,col='red')
 
 
 ```{r}
-selected.model = fit.loudness
+# TODO: prikazati tablicu sa svim svojstvima
+selected.model = fit.instrumentalness
 plot(selected.model$residuals)
 
 hist((selected.model$residuals))
@@ -185,10 +240,11 @@ qqline(rstandard(selected.model))
 
 plot(selected.model$fitted.values,selected.model$residuals)
  
-ks.test(rstandard(fit.tempo),'pnorm')
+ks.test(rstandard(selected.model),'pnorm')
 
 require(nortest)
-lillie.test(rstandard(fit.tempo))
+lillie.test(rstandard(selected.model))
+
 ```
 
 
@@ -211,15 +267,22 @@ summary(fit.instrumentalness)
 
 
 ```{r}
-cor(SpotifyFeatures$loudness,SpotifyFeatures$popularity)
+cor(SpotifyFeatures$duration_ms,SpotifyFeatures$popularity)
 
-cor.test(SpotifyFeatures$loudness,SpotifyFeatures$popularity)
+cor.test(SpotifyFeatures$duration_ms,SpotifyFeatures$popularity)
 ```
 
 
 ```{r}
-fit.loudness_dance = lm(popularity ~ danceability + instrumentalness, SpotifyFeatures) #regresija s jako koreliranim varijablama
-summary(fit.loudness_dance)
 
-cor(SpotifyFeatures$danceability,SpotifyFeatures$loudness)
+fit.loudness_dance = lm(popularity ~ danceability + loudness + duration_ms + valence, SpotifyFeatures) #regresija s jako koreliranim varijablama
+summary(fit.loudness_dance) 
+# Popularity i tempo nisu korelirani i zato tempo ne utjece u regresiju 
+```
+
+```{r}
+require(caret)
+
+logreg.mdl = glm(pop$popularity/100 ~ pop$liveness + pop$energy + pop$speechiness + pop$instrumentalness, data = pop, family = binomial())
+summary(logreg.mdl)
 ```
